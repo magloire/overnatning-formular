@@ -21,8 +21,10 @@ import {
   KeyboardTimePicker,
   KeyboardDatePicker,
 } from '@material-ui/pickers';
-import DawaSearcher from './DawaSearcher';
 import { InsertPhoto } from '@material-ui/icons';
+import * as yup from 'yup';
+import DawaSearcher from './DawaSearcher';
+import ErrorComp from './ErrorComp';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -35,36 +37,56 @@ const useStyles = makeStyles((theme) => ({
       color: theme.palette.text.secondary,
       margin:25
     },
-  }));
+}));
 
-  let fileName = '';
+let fileName = '';
 
 function Formular(){
-    const fileRef = React.useRef(null);
-    const classes = useStyles();
-    const [filNavn, setFilNavn] = useState('');
-    const [data,setData] = useState({
-      overnat_adresse : '',
-      overnat_navn : '',
-      overnat_lokaler : '',
-      overnat_over_50 : false,
-      overnat_tegning : '',
-      overnat_tegning_filnavn : '',
-      overnat_antal: '',
-      overnat_start_dato : new Date().toISOString(),
-      overnat_slut_dato : new Date().toISOString() ,
-      overnat_start_tid : new Date().toISOString() ,
-      overnat_slut_tid : new Date().toISOString() ,
-      overnat_kommune : '',
-      overnat_kontaktpers : '',
-      overnat_kontakttlf : '',
-      ansvarl_kontaktpers : '',
-      ansvarl_kontaktlf : '',
-      ansvarl_kontaktmail : '',
-      ansoegn_indsendt : '',
-      gid : '',
-      the_geom : '',
-      file:''
+  const fileRef = React.useRef(null);
+  const classes = useStyles();
+  const [filNavn, setFilNavn] = useState('');
+  const [data,setData] = useState({
+    overnat_adresse : '',
+    overnat_navn : '',
+    overnat_lokaler : '',
+    overnat_over_50 : false,
+    overnat_tegning : '',
+    overnat_tegning_filnavn : '',
+    overnat_antal: '',
+    overnat_start_dato : new Date().toISOString(),
+    overnat_slut_dato : new Date().toISOString() ,
+    overnat_start_tid : new Date().toISOString() ,
+    overnat_slut_tid : new Date().toISOString() ,
+    overnat_kommune : '',
+    overnat_kontaktpers : '',
+    overnat_kontakttlf : '',
+    ansvarl_kontaktpers : '',
+    ansvarl_kontaktlf : '',
+    ansvarl_kontaktmail : '',
+    ansoegn_indsendt : '',
+    gid : '',
+    the_geom : '',
+    file:''
+});
+
+    let schema = yup.object().shape({
+      overnat_adresse : yup.string().min(1),
+      overnat_navn : yup.string().required(),
+      overnat_lokaler : yup.string().required(),
+      overnat_over_50 : yup.string().required(),
+      // overnat_tegning : yup.string().required(),
+      // overnat_tegning_filnavn : yup.string().required(),
+      overnat_antal : yup.number().positive().integer(),
+      overnat_start_dato : yup.string().required(),
+      overnat_slut_dato : yup.string().required(),
+      overnat_start_tid : yup.string().required(),
+      overnat_slut_tid : yup.string().required(),
+      overnat_kommune : yup.string().required(),
+      overnat_kontaktpers : yup.string().required(),
+      overnat_kontakttlf : yup.string().matches(/^[0-9]{8}$/, 'telefonnr skal have 8 tal'),
+      ansvarl_kontaktpers : yup.string().required(),
+      ansvarl_kontaktlf : yup.string().matches(/^[0-9]{8}$/, 'telefonnr skal have 8 tal'),
+      ansvarl_kontaktmail : yup.string().email().required()
     });
 
   const kommuner = [
@@ -97,6 +119,7 @@ function Formular(){
   const [komkode, setKomkode] = useState('751|741|727|710|706|707|730|746')
 
     const [imageSrc, setImageSrc] = useState("");
+    const [formErrors, setFormErrors] = useState([]);
 
     const handleInputChange = (e) => {
     }
@@ -239,6 +262,7 @@ function Formular(){
     return (
       <MuiPickersUtilsProvider utils={DateFnsUtils} locale={daLocale}>
       <Container maxWidth="sm">
+        
         {/* <Paper> */}
                 <Typography variant="h6" gutterBottom>
                 Ansøg om midlertidig overnatning
@@ -496,9 +520,29 @@ function Formular(){
                         fullWidth 
                         />
                   </Grid>
+                  {
+                    formErrors.length > 0
+                    && <ErrorComp errors={formErrors} closeAlert={setFormErrors} />
+                  }
                   <Grid item xs={4}></Grid>
                   <Grid item xs={4}>
-                    <Button variant="contained" color="primary">Send</Button>
+                    <Button 
+                      variant="contained" 
+                      color="primary"
+                      onClick={e => {
+                        console.log(data);
+                        schema.validate(data, {abortEarly:false})
+                        .then(function(valid){
+                          alert('schame validity =>' + valid);
+                        })
+                        .catch(function(err){
+                          console.log(err.errors)
+                          setFormErrors(err.errors);
+                        })
+                      }}
+                      >
+                        Send
+                      </Button>
                   </Grid>
                   <Grid item xs={4}></Grid>
                   
