@@ -25,6 +25,8 @@ import { InsertPhoto } from '@material-ui/icons';
 import * as yup from 'yup';
 import DawaSearcher from './DawaSearcher';
 import ErrorComp from './ErrorComp';
+import TextInput from './components/TextInput';
+import {FormularContext, FormularProvider} from './context/FormContext';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -267,6 +269,9 @@ function Formular(){
                 <Typography variant="h6" gutterBottom>
                 Ansøg om midlertidig overnatning
               </Typography>
+              <FormularProvider>
+
+              
               <Grid container spacing={3}>
                   <Grid item xs={12}>
                       <TextField 
@@ -290,38 +295,13 @@ function Formular(){
                         </TextField>
                   </Grid>
                   <Grid item xs={12}>
-                      {/* <TextField 
-                        id="standard-basic" 
-                        InputLabelProps={{ shrink: true }} 
-                        label={
-                          <Typography variant="h6" component="h3">Overnatningstedets adresse</Typography>
-                        }
-                        fullWidth 
-                        /> */}
+                      
                         <DawaSearcher setAdressData={setAdressData} komkode={komkode} adresseTekst={adresseTekst} setAdresseTekst={setAdresseTekst}/>
                   </Grid>
-                  <Grid item xs={12}>
-                      <TextField 
-                        id="overnat_navn" 
-                        InputLabelProps={{ shrink: true }} 
-                        label={
-                          <Typography variant="h6" component="h3">Overnatningstedets Navn</Typography>
-                        }
-                        onChange = {handleFormData}
-                        fullWidth 
-                        />
-                  </Grid>
-                  <Grid item xs={12}>
-                      <TextField 
-                        id="overnat_lokaler" 
-                        InputLabelProps={{ shrink: true }} 
-                        label={
-                          <Typography variant="h6" component="h3">Lokaler</Typography>
-                        }
-                        onChange = {handleFormData}
-                        fullWidth 
-                        />
-                  </Grid>
+                  
+                  <TextInput size={12} id="overnat_navn" title="Overnatningstedets Navn" evtHandler={handleFormData} />
+                  
+                  <TextInput size={12} id="overnat_lokaler" title="Lokaler" evtHandler={handleFormData} />
                   <Grid item xs={6}>
                     <Typography style={{color:'rgba(0, 0, 0, 0.54)'}} variant="subtitle1" component="h3">Overnatter mere end 50 personer </Typography>
                     
@@ -390,17 +370,10 @@ function Formular(){
                   }
                 
                  
-                  <Grid item xs={12}>
-                      <TextField 
-                        id="overnat_antal" 
-                        InputLabelProps={{ shrink: true }} 
-                        label={
-                          <Typography variant="h6" component="h3">Maksimal antal overnatninger</Typography>
-                        }
-                        onChange = {handleFormData}
-                        fullWidth 
-                        />
-                  </Grid>
+                  
+                  <TextInput
+                    size={12} id="overnat_antal" title="Maksimal antal overnatninger" evtHandler={handleFormData}
+                  />
                   <Grid item xs={6}>
                       
                         <KeyboardDatePicker
@@ -464,62 +437,17 @@ function Formular(){
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12}>
-                      <TextField 
-                        id="overnat_kontaktpers" 
-                        InputLabelProps={{ shrink: true }} 
-                        label={
-                          <Typography variant="h6" component="h3">Navn Kontaktperson</Typography>
-                        }
-                        onChange = {handleFormData}
-                        fullWidth 
-                        />
-                  </Grid>
-                  <Grid item xs={6}>
-                      <TextField 
-                        id="overnat_kontakttlf" 
-                        InputLabelProps={{ shrink: true }} 
-                        label={
-                          <Typography variant="h6" component="h3">Kontakt tlf.</Typography>
-                        }
-                        onChange = {handleFormData}
-                        fullWidth 
-                        />
-                  </Grid>
+                  
+                  <TextInput size={12} id="overnat_kontaktpers" title="Navn Kontaktperson" evtHandler={handleFormData}/>
+                  
+                  <TextInput size={6} id="overnat_kontakttlf" title="Kontakt tlf." evtHandler={handleFormData}/>
                   <Grid item xs={12}></Grid>
-                  <Grid item xs={12}>
-                      <TextField 
-                        id="ansvarl_kontaktpers" 
-                        InputLabelProps={{ shrink: true }} 
-                        label={
-                          <Typography variant="h6" component="h3">Navn ansvarlig</Typography>
-                        }
-                        onChange = {handleFormData}
-                        fullWidth 
-                        />
-                  </Grid>
-                  <Grid item xs={6}>
-                      <TextField 
-                        id="ansvarl_kontaktlf" 
-                        InputLabelProps={{ shrink: true }} 
-                        label={
-                          <Typography variant="h6" component="h3">Tlf. ansvarlig</Typography>
-                        }
-                        onChange = {handleFormData}
-                        fullWidth 
-                        />
-                  </Grid>
-                  <Grid item xs={6}>
-                      <TextField 
-                        id="ansvarl_kontaktmail" 
-                        InputLabelProps={{ shrink: true }} 
-                        label={
-                          <Typography variant="h6" component="h3">E-mail ansvarlig</Typography>
-                        }
-                        onChange = {handleFormData}
-                        fullWidth 
-                        />
-                  </Grid>
+                  
+                  <TextInput size={12} id="ansvarl_kontaktpers" title="Navn ansvarlig" evtHandler={handleFormData}/>
+                  
+                  <TextInput size={6} id="ansvarl_kontaktlf" title="Tlf. ansvarlig" evtHandler={handleFormData}/>
+                  
+                  <TextInput size={6} id="ansvarl_kontaktmail" title="E-mail ansvarlig" evtHandler={handleFormData}/>
                   {
                     formErrors.length > 0
                     && <ErrorComp errors={formErrors} closeAlert={setFormErrors} />
@@ -549,6 +477,7 @@ function Formular(){
               </Grid>
               
           {/* </Paper> */}
+          </FormularProvider>
           </Container>
           </MuiPickersUtilsProvider>
 
