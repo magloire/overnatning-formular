@@ -43,6 +43,7 @@ export default function ImageUpload({ setImageSrc }) {
     let binaryString = e.target.result;
     console.log("before setImageSrc");
     setImageSrc(reader.result);
+    setValue("overnat_tegning", reader.result.replace(/^data:.+;base64,/, ""));
     // setData({
     //   ...data,
     //   overnat_tegning : btoa(binaryString)

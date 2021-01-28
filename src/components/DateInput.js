@@ -15,16 +15,16 @@ function DateInput({ size, id, title, label }) {
         let slutDato = new Date(state.overnat_slut_dato);
         let endDate = slutDato < startDate ? startDate : slutDato;
         setValues({
-          overnat_start_dato: startDate.toISOString(),
-          overnat_slut_dato: endDate.toISOString(),
-          overnat_start_tid: startDate.toISOString(),
-          overnat_slut_tid: endDate.toISOString(),
+          overnat_start_dato: startDate,
+          overnat_slut_dato: endDate,
+          overnat_start_tid: startDate,
+          overnat_slut_tid: endDate,
         });
         break;
       case "overnat_slut_dato":
         if (new Date(date) < new Date(state.overnat_start_dato)) return;
-        setValue("overnat_slut_dato", new Date(date).toISOString());
-        setValue("overnat_slut_tid", new Date(date).toISOString());
+        setValue("overnat_slut_dato", new Date(date));
+        setValue("overnat_slut_tid", new Date(date));
         break;
       default:
         return;
@@ -55,7 +55,7 @@ function DateInput({ size, id, title, label }) {
 function TimeInput({ size, id, title, label }) {
   const [state, setValue, setValues] = useContext(FormularContext);
   const handleTimeChange = (time) => {
-    setValue(id, new Date(time).toISOString());
+    setValue(id, new Date(time));
   };
 
   return (

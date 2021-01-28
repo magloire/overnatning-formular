@@ -15,6 +15,7 @@ import ImageUpload from "./components/ImageUpload";
 import DateTimeInputs from "./components/DateInput";
 import SelectInput from "./components/SelectInput";
 import SubmitButton from "./components/SubmitButton";
+import { postData } from "./service";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -27,6 +28,31 @@ const useStyles = makeStyles((theme) => ({
     margin: 25,
   },
 }));
+
+const buildQuery = (data) => {
+  const keys = Object.keys(data);
+  const columns = keys.join(",");
+  const values = keys
+    .map((key) => {
+      if (
+        key === "overnat_start_dato" ||
+        key === "overnat_slut_dato" ||
+        key === "overnat_start_tid" ||
+        key === "overnat_slut_tid"
+      ) {
+        return `'${formatedTimestamp(data[key])}'`;
+      }
+      return `'${data[key]}'`;
+    })
+    .join(",");
+  return `INSERT INTO midlertidig_overnatning(${columns}) VALUES(${values})`;
+};
+
+const formatedTimestamp = (d) => {
+  const date = d.toISOString().split("T")[0];
+  const time = d.toTimeString().split(" ")[0];
+  return `${date} ${time}`;
+};
 
 function Formular() {
   const [state, setValue, setValues] = useContext(FormularContext);
@@ -81,7 +107,6 @@ function Formular() {
   });
 
   const [komkode, setKomkode] = useState("751|741|727|710|706|707|730|746");
-
   const [imageSrc, setImageSrc] = useState("");
   const [formErrors, setFormErrors] = useState([]);
 
@@ -167,6 +192,20 @@ function Formular() {
         the_geom: `[${adress.adgangsadresse.x},${adress.adgangsadresse.y}]`, // TODO: post geometry
       });
     }
+    //ST_setsrid(ST_MakePoint(lat,long),4326) as geom
+    //the_geom: `[${adress.adgangsadresse.x},${adress.adgangsadresse.y}]`,
+
+    if (adress === "") {
+      setValues({
+        overnat_adresse: "",
+        the_geom: "",
+      });
+    } else {
+      setValues({
+        overnat_adresse: adress.tekst,
+        the_geom: `ST_setsrid(ST_MakePoint(${adress.adgangsadresse.x},${adress.adgangsadresse.y}),4326)`,
+      });
+    }
   };
 
   // const handleFormData = (e) => {
@@ -184,7 +223,7 @@ function Formular() {
 
   const [adresseTekst, setAdresseTekst] = useState("");
 
-  const reader = new FileReader();
+  // const reader = new FileReader();
 
   // const handleImageUpload = (e) => {
   //   console.log("file upload: ", e.target.files[0].name);
@@ -219,15 +258,31 @@ function Formular() {
   // };
 
   const submitHandler = (e) => {
-    console.log(data);
+    /*
+     * 1. collect all the data to send, including base64 string
+       2. create geom ST_setsrid(ST_MakePoint(lat,long),4326) as geom
+       3. build sql, axios.post
+       4. Success or Error => show feedback 
+     */
+    // console.log(data);
+    const formData = {
+      ...state,
+      ansoegn_indsendt: new Date(),
+    };
+
     schema
-      .validate(data, { abortEarly: false })
+      .validate(formData, { abortEarly: false })
       .then(function (valid) {
         alert("schame validity =>" + valid);
+        const q = buildQuery(state);
+        postData(q).then((res) => {
+          console.log(res.data);
+        });
       })
       .catch(function (err) {
         console.log(err.errors);
         setFormErrors(err.errors);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       });
   };
 
@@ -237,6 +292,9 @@ function Formular() {
         <Typography variant='h6' gutterBottom>
           Ansøg om midlertidig overnatning
         </Typography>
+        {formErrors.length > 0 && (
+          <ErrorComp errors={formErrors} closeAlert={setFormErrors} />
+        )}
         <Grid container spacing={3}>
           <SelectInput
             size={12}
@@ -278,6 +336,7 @@ function Formular() {
           <TextInput
             size={12}
             id='overnat_antal'
+            type='number'
             title='Maksimal antal overnatninger'
           />
           <DateTimeInputs />
@@ -286,22 +345,30 @@ function Formular() {
             id='overnat_kontaktpers'
             title='Navn Kontaktperson'
           />
-          <TextInput size={6} id='overnat_kontakttlf' title='Kontakt tlf.' />
+          <TextInput
+            type='number'
+            size={6}
+            id='overnat_kontakttlf'
+            title='Kontakt tlf.'
+          />
           <Grid item xs={12}></Grid>
           <TextInput
             size={12}
             id='ansvarl_kontaktpers'
             title='Navn ansvarlig'
           />
-          <TextInput size={6} id='ansvarl_kontaktlf' title='Tlf. ansvarlig' />
+          <TextInput
+            type='number'
+            size={6}
+            id='ansvarl_kontaktlf'
+            title='Tlf. ansvarlig'
+          />
           <TextInput
             size={6}
             id='ansvarl_kontaktmail'
             title='E-mail ansvarlig'
           />
-          {formErrors.length > 0 && (
-            <ErrorComp errors={formErrors} closeAlert={setFormErrors} />
-          )}
+
           <SubmitButton onClick={submitHandler} />
         </Grid>
       </Container>
