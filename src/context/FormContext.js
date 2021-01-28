@@ -25,7 +25,7 @@ let data = {
   //imageSrc: "",
 };
 
-const FormularContext = React.createContext([{}, () => {}, () => {}]);
+const FormularContext = React.createContext([{}, () => {}, () => {}, () => {}]);
 
 const FormularProvider = (props) => {
   const [state, setState] = useState(data);
@@ -37,6 +37,8 @@ const FormularProvider = (props) => {
     }));
   };
 
+  const resetForm = () => setState(data);
+
   const setValues = (keyValues) => {
     Object.keys(keyValues).forEach((k) => {
       setValue(k, keyValues[k]);
@@ -44,7 +46,7 @@ const FormularProvider = (props) => {
   };
 
   return (
-    <FormularContext.Provider value={[state, setValue, setValues]}>
+    <FormularContext.Provider value={[state, setValue, setValues, resetForm]}>
       {props.children}
     </FormularContext.Provider>
   );

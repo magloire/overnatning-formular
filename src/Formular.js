@@ -9,6 +9,7 @@ import { MuiPickersUtilsProvider } from "@material-ui/pickers";
 import * as yup from "yup";
 import DawaSearcher from "./DawaSearcher";
 import ErrorComp from "./ErrorComp";
+import SuccessAlert from "./SuccessAlert";
 import TextInput from "./components/TextInput";
 import { FormularContext } from "./context/FormContext";
 import ImageUpload from "./components/ImageUpload";
@@ -38,24 +39,27 @@ const buildQuery = (data) => {
         key === "overnat_start_dato" ||
         key === "overnat_slut_dato" ||
         key === "overnat_start_tid" ||
+        key === "ansoegn_indsendt" ||
         key === "overnat_slut_tid"
       ) {
         return `'${formatedTimestamp(data[key])}'`;
       }
+      if (key === "the_geom") return `${data[key]}`;
+
       return `'${data[key]}'`;
     })
     .join(",");
-  return `INSERT INTO midlertidig_overnatning(${columns}) VALUES(${values})`;
+  return `INSERT INTO faelles.midlertidig_overnatning(${columns}) VALUES(${values})`;
 };
 
 const formatedTimestamp = (d) => {
-  const date = d.toISOString().split("T")[0];
-  const time = d.toTimeString().split(" ")[0];
+  const date = new Date(d).toISOString().split("T")[0];
+  const time = new Date(d).toTimeString().split(" ")[0];
   return `${date} ${time}`;
 };
 
 function Formular() {
-  const [state, setValue, setValues] = useContext(FormularContext);
+  const [state, setValue, setValues, resetForm] = useContext(FormularContext);
   const fileRef = React.useRef(null);
   const classes = useStyles();
   const [data, setData] = useState({
@@ -109,6 +113,7 @@ function Formular() {
   const [komkode, setKomkode] = useState("751|741|727|710|706|707|730|746");
   const [imageSrc, setImageSrc] = useState("");
   const [formErrors, setFormErrors] = useState([]);
+  const [successMessage, setSuccessMessage] = useState(false);
 
   // const handleInputChange = (e) => {};
 
@@ -179,19 +184,19 @@ function Formular() {
 
   const setAdressData = (adress) => {
     //console.log(`[${adress.adgangsadresse.x},${adress.adgangsadresse.x}]`);
-    if (adress === "") {
-      setData({
-        ...data,
-        overnat_adresse: "",
-        the_geom: "",
-      });
-    } else {
-      setData({
-        ...data,
-        overnat_adresse: adress.tekst,
-        the_geom: `[${adress.adgangsadresse.x},${adress.adgangsadresse.y}]`, // TODO: post geometry
-      });
-    }
+    // if (adress === "") {
+    //   setData({
+    //     ...data,
+    //     overnat_adresse: "",
+    //     the_geom: "",
+    //   });
+    // } else {
+    //   setData({
+    //     ...data,
+    //     overnat_adresse: adress.tekst,
+    //     the_geom: `[${adress.adgangsadresse.x},${adress.adgangsadresse.y}]`, // TODO: post geometry
+    //   });
+    // }
     //ST_setsrid(ST_MakePoint(lat,long),4326) as geom
     //the_geom: `[${adress.adgangsadresse.x},${adress.adgangsadresse.y}]`,
 
@@ -203,7 +208,7 @@ function Formular() {
     } else {
       setValues({
         overnat_adresse: adress.tekst,
-        the_geom: `ST_setsrid(ST_MakePoint(${adress.adgangsadresse.x},${adress.adgangsadresse.y}),4326)`,
+        the_geom: `ST_setsrid(ST_MakePoint(${adress.adgangsadresse.x},${adress.adgangsadresse.y}),25832)`,
       });
     }
   };
@@ -223,40 +228,6 @@ function Formular() {
 
   const [adresseTekst, setAdresseTekst] = useState("");
 
-  // const reader = new FileReader();
-
-  // const handleImageUpload = (e) => {
-  //   console.log("file upload: ", e.target.files[0].name);
-  //   setFilNavn(e.target.files[0].name);
-  //   let file = e.target.files[0];
-  //   let name = e.target.files[0].name;
-  //   fileName = name;
-
-  //   setData({
-  //     ...data,
-  //     overnat_tegning_filnavn: e.target.files[0].name,
-  //   });
-
-  //   if (file) {
-  //     reader.onload = handleReaderLoaded;
-  //     // reader.readAsBinaryString(file);
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
-
-  // const _substr = (str, len) => {
-  //   return "..." + str.substring(str.length - len);
-  // };
-
-  // const handleReaderLoaded = (e) => {
-  //   let binaryString = e.target.result;
-  //   setImageSrc(reader.result);
-  //   // setData({
-  //   //   ...data,
-  //   //   overnat_tegning : btoa(binaryString)
-  //   // });
-  // };
-
   const submitHandler = (e) => {
     /*
      * 1. collect all the data to send, including base64 string
@@ -269,15 +240,26 @@ function Formular() {
       ...state,
       ansoegn_indsendt: new Date(),
     };
-
+    console.log("asnøgning", formData);
     schema
       .validate(formData, { abortEarly: false })
       .then(function (valid) {
-        alert("schame validity =>" + valid);
-        const q = buildQuery(state);
-        postData(q).then((res) => {
-          console.log(res.data);
-        });
+        //alert("schame validity =>" + valid);
+        const q = buildQuery(formData);
+        postData(q)
+          .then((res) => {
+            setSuccessMessage(true);
+            setFormErrors([]);
+            setAdresseTekst("");
+            setKomkode("751|741|727|710|706|707|730|746");
+            resetForm();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          })
+          .catch((err) => {
+            setFormErrors(["Der var fejl ved indsending..."]);
+            setSuccessMessage(false);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          });
       })
       .catch(function (err) {
         console.log(err.errors);
@@ -295,6 +277,9 @@ function Formular() {
         {formErrors.length > 0 && (
           <ErrorComp errors={formErrors} closeAlert={setFormErrors} />
         )}
+
+        {successMessage && <SuccessAlert closeAlert={setSuccessMessage} />}
+
         <Grid container spacing={3}>
           <SelectInput
             size={12}

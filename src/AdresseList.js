@@ -20,7 +20,7 @@ export default function AdresseList({
 
   useEffect(() => {
     if (searchTerm.length < 3) return;
-    const url = `https://dawa.aws.dk/adgangsadresser/autocomplete?q=${searchTerm}&type=adgangsadresse&side=1&per_side=105&noformat=1&kommunekode=${komkode}`;
+    const url = `https://dawa.aws.dk/adgangsadresser/autocomplete?q=${searchTerm}&type=adgangsadresse&side=1&per_side=105&noformat=1&kommunekode=${komkode}&srid=25832`;
     console.log(url);
     fetch(url).then((res) => {
       res.json().then((data) => {

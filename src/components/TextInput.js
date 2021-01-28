@@ -16,6 +16,7 @@ export default function TextInput(props) {
       <TextField
         id={id}
         type={type || "text"}
+        value={state[id]}
         InputLabelProps={{ shrink: true }}
         label={
           <Typography variant='h6' component='h3'>
