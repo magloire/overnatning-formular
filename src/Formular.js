@@ -16,7 +16,7 @@ import ImageUpload from "./components/ImageUpload";
 import DateTimeInputs from "./components/DateInput";
 import SelectInput from "./components/SelectInput";
 import SubmitButton from "./components/SubmitButton";
-import { postData } from "./service";
+import { postData, postFormData } from "./service";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -63,54 +63,56 @@ function Formular() {
   const fileRef = React.useRef(null);
   const classes = useStyles();
   const [data, setData] = useState({
-    overnat_adresse: "",
-    overnat_navn: "",
-    overnat_lokaler: "",
-    overnat_over_50: false,
-    overnat_tegning: "",
-    overnat_tegning_filnavn: "",
-    overnat_antal: "",
-    overnat_start_dato: new Date().toISOString(),
-    overnat_slut_dato: new Date().toISOString(),
-    overnat_start_tid: new Date().toISOString(),
-    overnat_slut_tid: new Date().toISOString(),
-    overnat_kommune: "",
-    overnat_kontaktpers: "",
-    overnat_kontakttlf: "",
+    ansoeger_mail: "",
+    ansoeger_navn: "",
+    ansoeger_tlf: "",
+    ansoegn_indsendt: "",
+    ansvarl_kontaktmail: "",
     ansvarl_kontaktpers: "",
     ansvarl_kontaktlf: "",
-    ansvarl_kontaktmail: "",
-    ansoegn_indsendt: "",
-    gid: "",
+    overnat_adresse: "",
+    overnat_antal: "",
+    overnat_kommune: "",
+    overnat_lokaler: "",
+    overnat_navn: "",
+    overnat_over_150: false,
+    overnat_slut_dato: new Date().toISOString(),
+    overnat_slut_tid: new Date().toISOString(),
+    overnat_start_dato: new Date().toISOString(),
+    overnat_start_tid: new Date().toISOString(),
+    overnat_tegning: "",
+    overnat_tegning_filnavn: "",
     the_geom: "",
+    gid: "",
     file: "",
   });
 
   let schema = yup.object().shape({
-    overnat_adresse: yup.string().min(1),
-    overnat_navn: yup.string().required(),
-    overnat_lokaler: yup.string().required(),
-    overnat_over_50: yup.string().required(),
-    // overnat_tegning : yup.string().required(),
-    // overnat_tegning_filnavn : yup.string().required(),
-    overnat_antal: yup.number().positive().integer(),
-    overnat_start_dato: yup.string().required(),
-    overnat_slut_dato: yup.string().required(),
-    overnat_start_tid: yup.string().required(),
-    overnat_slut_tid: yup.string().required(),
-    overnat_kommune: yup.string().required(),
-    overnat_kontaktpers: yup.string().required(),
-    overnat_kontakttlf: yup
+    ansoeger_mail: yup.string().required(),
+    ansoeger_navn: yup.string().required(),
+    ansoeger_tlf: yup
       .string()
       .matches(/^[0-9]{8}$/, "telefonnr skal have 8 tal"),
+    ansvarl_kontaktmail: yup.string().email().required(),
     ansvarl_kontaktpers: yup.string().required(),
     ansvarl_kontaktlf: yup
       .string()
       .matches(/^[0-9]{8}$/, "telefonnr skal have 8 tal"),
-    ansvarl_kontaktmail: yup.string().email().required(),
+    overnat_adresse: yup.string().min(1),
+    overnat_antal: yup.number().positive().integer(),
+    overnat_kommune: yup.string().required(),
+    overnat_lokaler: yup.string().required(),
+    overnat_navn: yup.string().required(),
+    overnat_over_150: yup.string().required(),
+    // overnat_tegning : yup.string().required(),
+    // overnat_tegning_filnavn : yup.string().required(),
+    overnat_slut_dato: yup.string().required(),
+    overnat_slut_tid: yup.string().required(),
+    overnat_start_dato: yup.string().required(),
+    overnat_start_tid: yup.string().required(),
   });
 
-  const [komkode, setKomkode] = useState("751|741|727|710|706|707|730|746");
+  const [komkode, setKomkode] = useState("751|741|727|746");
   const [imageSrc, setImageSrc] = useState("");
   const [formErrors, setFormErrors] = useState([]);
   const [successMessage, setSuccessMessage] = useState(false);
@@ -203,12 +205,22 @@ function Formular() {
     if (adress === "") {
       setValues({
         overnat_adresse: "",
+        overnat_postnr: "",
+        overnat_by: "",
         the_geom: "",
+        x_coord: "",
+        y_coord: "",
       });
     } else {
+      let streetname = adress.tekst.split(",");
+      let adressname = streetname.length > 0 ? streetname[0] : adress.tekst;
       setValues({
-        overnat_adresse: adress.tekst,
+        overnat_adresse: adressname,
+        overnat_postnr: adress.adgangsadresse.postnr,
+        overnat_by: adress.adgangsadresse.postnrnavn,
         the_geom: `ST_setsrid(ST_MakePoint(${adress.adgangsadresse.x},${adress.adgangsadresse.y}),25832)`,
+        x_coord: adress.adgangsadresse.x,
+        y_coord: adress.adgangsadresse.y,
       });
     }
   };
@@ -223,7 +235,7 @@ function Formular() {
 
   const handleCheckBox = (e) => {
     console.log("handleCheckbox => ", e.target.value);
-    setValue("overnat_over_50", e.target.checked);
+    setValue("overnat_over_150", e.target.checked);
   };
 
   const [adresseTekst, setAdresseTekst] = useState("");
@@ -240,18 +252,19 @@ function Formular() {
       ...state,
       ansoegn_indsendt: new Date(),
     };
-    console.log("asnøgning", formData);
+    console.log("ansøgning", formData);
     schema
       .validate(formData, { abortEarly: false })
       .then(function (valid) {
         //alert("schame validity =>" + valid);
         const q = buildQuery(formData);
-        postData(q)
+        //postData(q)
+        postFormData(formData)
           .then((res) => {
             setSuccessMessage(true);
             setFormErrors([]);
             setAdresseTekst("");
-            setKomkode("751|741|727|710|706|707|730|746");
+            setKomkode("751|741|727|746");
             resetForm();
             window.scrollTo({ top: 0, behavior: "smooth" });
           })
@@ -313,11 +326,11 @@ function Formular() {
           <Grid item xs={6}>
             <Checkbox
               color='primary'
-              checked={state.overnat_over_50}
+              checked={state.overnat_over_150}
               onChange={handleCheckBox}
             />
           </Grid>
-          {state.overnat_over_50 && <ImageUpload setImageSrc={setImageSrc} />}
+          {state.overnat_over_150 && <ImageUpload setImageSrc={setImageSrc} />}
           <TextInput
             size={12}
             id='overnat_antal'
@@ -325,17 +338,14 @@ function Formular() {
             title='Maksimal antal overnatninger'
           />
           <DateTimeInputs />
-          <TextInput
-            size={12}
-            id='overnat_kontaktpers'
-            title='Navn Kontaktperson'
-          />
+          <TextInput size={12} id='ansoeger_navn' title='Ansøger navn' />
           <TextInput
             type='number'
             size={6}
-            id='overnat_kontakttlf'
-            title='Kontakt tlf.'
+            id='ansoeger_tlf'
+            title='Ansøger tlf.'
           />
+          <TextInput size={6} id='ansoeger_mail' title='Ansøger mail' />
           <Grid item xs={12}></Grid>
           <TextInput
             size={12}
